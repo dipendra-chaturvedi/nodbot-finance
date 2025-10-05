@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+
+{% block title %}Register - NodBot Finance{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center" style="min-height: 100vh; align-items: center;">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <h1 style="color: #667eea;">💰</h1>
+                        <h2>Create Account</h2>
+                        <p class="text-muted">Register for NodBot Finance</p>
+                    </div>
+                    
+                    <form id="register-form">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Username *</label>
+                                <input type="text" class="form-control" id="username" placeholder="Enter username" required>
+                                <small class="text-muted">Username must be unique</small>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Email Address *</label>
+                                <input type="email" class="form-control" id="email" placeholder="Enter email" required>
+                                <small class="text-muted">We'll never share your email</small>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Password *</label>
+                                <input type="password" class="form-control" id="password" placeholder="Enter password" required minlength="6">
+                                <small class="text-muted">Min. 6 characters</small>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Confirm Password *</label>
+                                <input type="password" class="form-control" id="confirm-password" placeholder="Confirm password" required>
+                                <small class="text-muted">Must match password</small>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Account Role *</label>
+                            <select class="form-select" id="role" required>
+                                <option value="">Select Role...</option>
+                                <option value="user">User (Regular Account)</option>
+                                <option value="admin">Admin (Manage Users)</option>
+                                <option value="master">Master (Full Access)</option>
+                                <option value="master_assistant">Master Assistant (Helper)</option>
+                            </select>
+                            <small class="text-muted">Select your account type</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Initial Balance (Optional)</label>
+                            <input type="number" class="form-control" id="initial-balance" placeholder="0.00" min="0" step="0.01">
+                            <small class="text-muted">Starting account balance</small>
+                        </div>
+                        
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="terms" required>
+                            <label class="form-check-label" for="terms">
+                                I agree to the Terms & Conditions
+                            </label>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100 py-2">
+                            <i class="fas fa-user-plus"></i> Create Account
+                        </button>
+                    </form>
+                    
+                    <div class="text-center mt-3">
+                        <p>Already have an account? <a href="{{ url_for('auth.login') }}">Login here</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('register-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirm-password').value;
+    
+    // Validate passwords match
+    if (password !== confirmPassword) {
+        alert('Passwords do not match!');
+        return;
+    }
+    
+    // Validate password length
+    if (password.length < 6) {
+        alert('Password must be at least 6 characters long!');
+        return;
+    }
+    
+    // Prepare data
+    const userData = {
+        username: document.getElementById('username').value,
+        email: document.getElementById('email').value,
+        password: password,
+        role: document.getElementById('role').value
+    };
+    
+    // Add initial balance if provided
+    const initialBalance = document.getElementById('initial-balance').value;
+    if (initialBalance) {
+        userData.initial_balance = parseFloat(initialBalance);
+    }
+    
+    try {
+        const response = await fetch('/auth/register', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(userData)
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('✅ Registration successful! Please login.');
+            window.location.href = '/auth/login';
+        } else {
+            alert('❌ ' + data.message);
+        }
+    } catch (error) {
+        console.error('Registration error:', error);
+        alert('❌ Registration failed. Please try again.');
+    }
+});
+
+// Real-time password matching validation
+document.getElementById('confirm-password').addEventListener('input', function() {
+    const password = document.getElementById('password').value;
+    const confirmPassword = this.value;
+    
+    if (confirmPassword && password !== confirmPassword) {
+        this.setCustomValidity('Passwords do not match');
+        this.classList.add('is-invalid');
+    } else {
+        this.setCustomValidity('');
+        this.classList.remove('is-invalid');
+    }
+});
+</script>
+
+<style>
+.form-label {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.is-invalid {
+    border-color: #dc3545;
+}
+
+.btn-primary {
+    font-size: 16px;
+    font-weight: 600;
+    padding: 12px;
+}
+
+small.text-muted {
+    font-size: 12px;
+}
+
+.card {
+    border-radius: 15px;
+}
+</style>
+{% endblock %}

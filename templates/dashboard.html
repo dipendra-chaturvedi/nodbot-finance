@@ -1,0 +1,103 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Dashboard - NodBot Finance</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --sidebar-width: 250px; --primary-color: #667eea; --secondary-color: #764ba2; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fa; margin: 0; padding: 0; }
+        .sidebar { position: fixed; top: 0; left: 0; height: 100vh; width: var(--sidebar-width); background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); padding: 20px 0; z-index: 1000; box-shadow: 2px 0 10px rgba(0,0,0,0.1); }
+        .sidebar-brand { padding: 20px; text-align: center; color: white; font-size: 24px; font-weight: bold; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px; }
+        .sidebar-nav { list-style: none; padding: 0; margin: 0; }
+        .sidebar-nav li { margin: 5px 0; }
+        .sidebar-nav a { display: flex; align-items: center; padding: 15px 25px; color: rgba(255,255,255,0.8); text-decoration: none; transition: all 0.3s; }
+        .sidebar-nav a:hover, .sidebar-nav a.active { background: rgba(255,255,255,0.1); color: white; padding-left: 30px; }
+        .sidebar-nav i { margin-right: 15px; width: 20px; text-align: center; }
+        .top-navbar { position: fixed; top: 0; left: var(--sidebar-width); right: 0; height: 60px; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: space-between; padding: 0 30px; z-index: 999; }
+        .main-content { margin-left: var(--sidebar-width); margin-top: 60px; padding: 30px; min-height: calc(100vh - 60px); }
+        .user-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; }
+        .stat-card { background: white; border-radius: 10px; padding: 25px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); margin-bottom: 20px; }
+        .stat-card.primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .stat-value { font-size: 32px; font-weight: bold; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-brand">NodBot Finance</div>
+        <ul class="sidebar-nav">
+            <li><a href="/dashboard" class="active"><i class="fas fa-home"></i><span>Dashboard</span></a></li>
+            <li><a href="/loans/"><i class="fas fa-hand-holding-usd"></i><span>Loans</span></a></li>
+            <li><a href="/investments/"><i class="fas fa-chart-line"></i><span>Investments</span></a></li>
+            <li><a href="/payments/"><i class="fas fa-exchange-alt"></i><span>Payments</span></a></li>
+            <li><a href="/auth/logout"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
+        </ul>
+    </div>
+    <div class="top-navbar">
+        <h4 class="mb-0">Welcome, {{ session.username }}</h4>
+        <div class="user-avatar">{{ session.username[0].upper() }}</div>
+    </div>
+    <div class="main-content">
+        <h2 class="mb-4">My Dashboard</h2>
+        <div class="row">
+            <div class="col-md-3"><div class="stat-card primary"><div><i class="fas fa-wallet"></i> Balance</div><div class="stat-value" id="balance">₹0.00</div></div></div>
+            <div class="col-md-3"><div class="stat-card"><div><i class="fas fa-hand-holding-usd"></i> Active Loans</div><div class="stat-value" id="loans-count">0</div></div></div>
+            <div class="col-md-3"><div class="stat-card"><div><i class="fas fa-chart-line"></i> Investments</div><div class="stat-value" id="investments-count">0</div></div></div>
+            <div class="col-md-3"><div class="stat-card"><div><i class="fas fa-exchange-alt"></i> Transactions</div><div class="stat-value" id="transactions-count">0</div></div></div>
+        </div>
+        <div class="row mt-4">
+            <div class="col-md-12"><div class="card"><div class="card-body"><h5 class="card-title">Quick Actions</h5><div class="row"><div class="col-md-3"><a href="/loans/" class="btn btn-primary w-100 mb-2"><i class="fas fa-plus-circle"></i> Request Loan</a></div><div class="col-md-3"><a href="/investments/" class="btn btn-success w-100 mb-2"><i class="fas fa-chart-line"></i> New Investment</a></div><div class="col-md-3"><a href="/payments/" class="btn btn-info w-100 mb-2"><i class="fas fa-paper-plane"></i> Send Money</a></div><div class="col-md-3"><button class="btn btn-secondary w-100 mb-2" onclick="location.reload()"><i class="fas fa-sync-alt"></i> Refresh</button></div></div></div></div></div>
+        </div>
+        <div class="row mt-4">
+            <div class="col-md-6"><div class="card"><div class="card-body"><h5 class="card-title">My Loans</h5><div id="loans-list"><p class="text-muted">Loading...</p></div></div></div></div>
+            <div class="col-md-6"><div class="card"><div class="card-body"><h5 class="card-title">My Investments</h5><div id="investments-list"><p class="text-muted">Loading...</p></div></div></div></div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    async function loadDashboard() {
+        const token = localStorage.getItem('token');
+        try {
+            const userRes = await fetch('/auth/me', { headers: {'Authorization': 'Bearer ' + token} });
+            const userData = await userRes.json();
+            if (userData.success) document.getElementById('balance').textContent = '₹' + parseFloat(userData.user.balance).toFixed(2);
+            
+            const loansRes = await fetch('/loans/api', { headers: {'Authorization': 'Bearer ' + token} });
+            const loansData = await loansRes.json();
+            document.getElementById('loans-count').textContent = loansData.loans?.length || 0;
+            const loansList = document.getElementById('loans-list');
+            if (loansData.loans && loansData.loans.length > 0) {
+                loansList.innerHTML = '';
+                loansData.loans.slice(0, 3).forEach(loan => {
+                    loansList.innerHTML += '<div class="border-bottom py-2"><div class="d-flex justify-content-between"><span><strong>' + loan.loan_type.toUpperCase() + '</strong></span><span class="badge bg-' + (loan.status === 'approved' ? 'success' : 'warning') + '">' + loan.status + '</span></div><small class="text-muted">₹' + parseFloat(loan.amount).toFixed(2) + '</small></div>';
+                });
+            } else {
+                loansList.innerHTML = '<p class="text-muted">No loans yet</p>';
+            }
+            
+            const investmentsRes = await fetch('/investments/api', { headers: {'Authorization': 'Bearer ' + token} });
+            const investmentsData = await investmentsRes.json();
+            document.getElementById('investments-count').textContent = investmentsData.investments?.length || 0;
+            const investmentsList = document.getElementById('investments-list');
+            if (investmentsData.investments && investmentsData.investments.length > 0) {
+                investmentsList.innerHTML = '';
+                investmentsData.investments.slice(0, 3).forEach(inv => {
+                    investmentsList.innerHTML += '<div class="border-bottom py-2"><div class="d-flex justify-content-between"><span><strong>' + inv.investment_type.toUpperCase() + '</strong></span><span class="badge bg-success">' + inv.status + '</span></div><small class="text-muted">₹' + parseFloat(inv.amount).toFixed(2) + '</small></div>';
+                });
+            } else {
+                investmentsList.innerHTML = '<p class="text-muted">No investments yet</p>';
+            }
+            
+            const paymentsRes = await fetch('/payments/api', { headers: {'Authorization': 'Bearer ' + token} });
+            const paymentsData = await paymentsRes.json();
+            document.getElementById('transactions-count').textContent = paymentsData.payments?.length || 0;
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+    loadDashboard();
+    </script>
+</body>
+</html>

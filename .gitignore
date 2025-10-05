@@ -1,0 +1,61 @@
+cd D:\Nodbot\nodbot-finance-flask
+
+# Create .gitignore
+@"
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Environment variables
+.env
+*.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Test files
+test_*.py
+test_*.html
+create_*.py
+fix_*.py
+setup_*.py
+"@ | Out-File -FilePath ".gitignore" -Encoding UTF8
+
+Write-Host "✅ Created .gitignore" -ForegroundColor Green

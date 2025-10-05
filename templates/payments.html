@@ -1,0 +1,117 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Payments - NodBot Finance</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fa; margin: 0; padding: 0; }
+        .sidebar { position: fixed; top: 0; left: 0; height: 100vh; width: 250px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px 0; z-index: 1000; }
+        .sidebar-brand { padding: 20px; text-align: center; color: white; font-size: 24px; font-weight: bold; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px; }
+        .sidebar-nav { list-style: none; padding: 0; margin: 0; }
+        .sidebar-nav a { display: flex; align-items: center; padding: 15px 25px; color: rgba(255,255,255,0.8); text-decoration: none; }
+        .sidebar-nav a:hover, .sidebar-nav a.active { background: rgba(255,255,255,0.1); color: white; }
+        .sidebar-nav i { margin-right: 15px; }
+        .top-navbar { position: fixed; top: 0; left: 250px; right: 0; height: 60px; background: white; display: flex; align-items: center; justify-content: space-between; padding: 0 30px; z-index: 999; }
+        .main-content { margin-left: 250px; margin-top: 60px; padding: 30px; }
+        .user-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-brand">NodBot Finance</div>
+        <ul class="sidebar-nav">
+            <li><a href="/dashboard"><i class="fas fa-home"></i>Dashboard</a></li>
+            <li><a href="/loans/"><i class="fas fa-hand-holding-usd"></i>Loans</a></li>
+            <li><a href="/investments/"><i class="fas fa-chart-line"></i>Investments</a></li>
+            <li><a href="/payments/" class="active"><i class="fas fa-exchange-alt"></i>Payments</a></li>
+            <li><a href="/auth/logout"><i class="fas fa-sign-out-alt"></i>Logout</a></li>
+        </ul>
+    </div>
+    <div class="top-navbar">
+        <h4 class="mb-0">My Payments</h4>
+        <div class="user-avatar">{{ session.username[0].upper() }}</div>
+    </div>
+    <div class="main-content">
+        <h2 class="mb-4">Payments & Transfers</h2>
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#transferModal"><i class="fas fa-paper-plane"></i> Send Money</button>
+                <button class="btn btn-secondary" onclick="loadPayments()"><i class="fas fa-sync-alt"></i> Refresh</button>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Transaction History</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead><tr><th>Type</th><th>From/To</th><th>Amount</th><th>Date</th></tr></thead>
+                        <tbody id="payments-list"><tr><td colspan="4" class="text-center">Loading...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="transferModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title">Send Money</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <form id="transfer-form">
+                        <div class="mb-3"><label class="form-label">Recipient User ID *</label><input type="number" class="form-control" id="receiver-id" min="1" required></div>
+                        <div class="mb-3"><label class="form-label">Amount (₹) *</label><input type="number" class="form-control" id="transfer-amount" min="1" step="1" required></div>
+                        <div class="mb-3"><label class="form-label">Reason *</label><textarea class="form-control" id="transfer-reason" rows="3" required></textarea></div>
+                        <button type="submit" class="btn btn-primary w-100"><i class="fas fa-paper-plane"></i> Send Money</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    async function loadPayments() {
+        const token = localStorage.getItem('token');
+        const tbody = document.getElementById('payments-list');
+        try {
+            const response = await fetch('/payments/api', { headers: {'Authorization': 'Bearer ' + token} });
+            const data = await response.json();
+            if (data.success && data.payments && data.payments.length > 0) {
+                tbody.innerHTML = '';
+                const userId = {{ session.user_id }};
+                data.payments.forEach(payment => {
+                    const isSent = payment.sender_id === userId;
+                    tbody.innerHTML += '<tr><td><span class="badge bg-' + (isSent ? 'danger' : 'success') + '">' + (isSent ? 'Sent' : 'Received') + '</span></td><td>' + (isSent ? payment.receiver_name : payment.sender_name) + '</td><td class="' + (isSent ? 'text-danger' : 'text-success') + '">' + (isSent ? '-' : '+') + '₹' + parseFloat(payment.amount).toFixed(2) + '</td><td>' + new Date(payment.created_at).toLocaleString() + '</td></tr>';
+                });
+            } else {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No transactions yet</td></tr>';
+            }
+        } catch (error) { console.error(error); }
+    }
+    document.getElementById('transfer-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const token = localStorage.getItem('token');
+        const response = await fetch('/payments/api/transfer', {
+            method: 'POST',
+            headers: {'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                receiver_id: parseInt(document.getElementById('receiver-id').value),
+                amount: parseFloat(document.getElementById('transfer-amount').value),
+                reason: document.getElementById('transfer-reason').value
+            })
+        });
+        const data = await response.json();
+        if (data.success) {
+            alert('✅ Money sent successfully!');
+            bootstrap.Modal.getInstance(document.getElementById('transferModal')).hide();
+            loadPayments();
+            location.reload();
+        } else {
+            alert('❌ ' + data.message);
+        }
+    });
+    loadPayments();
+    </script>
+</body>
+</html>

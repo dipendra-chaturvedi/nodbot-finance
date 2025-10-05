@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Users Management - NodBot Finance</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fa; margin: 0; padding: 0; }
+        .sidebar { position: fixed; top: 0; left: 0; height: 100vh; width: 250px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px 0; z-index: 1000; box-shadow: 2px 0 10px rgba(0,0,0,0.1); }
+        .sidebar-brand { padding: 20px; text-align: center; color: white; font-size: 24px; font-weight: bold; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px; }
+        .sidebar-nav { list-style: none; padding: 0; margin: 0; }
+        .sidebar-nav li { margin: 5px 0; }
+        .sidebar-nav a { display: flex; align-items: center; padding: 15px 25px; color: rgba(255,255,255,0.8); text-decoration: none; transition: all 0.3s; }
+        .sidebar-nav a:hover, .sidebar-nav a.active { background: rgba(255,255,255,0.1); color: white; padding-left: 30px; }
+        .sidebar-nav i { margin-right: 15px; width: 20px; text-align: center; }
+        .top-navbar { position: fixed; top: 0; left: 250px; right: 0; height: 60px; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: space-between; padding: 0 30px; z-index: 999; }
+        .main-content { margin-left: 250px; margin-top: 60px; padding: 30px; min-height: calc(100vh - 60px); }
+        .user-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; }
+        .user-card { background: white; border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); transition: transform 0.3s; }
+        .user-card:hover { transform: translateY(-5px); box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
+        .user-avatar-large { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center; color: white; font-size: 32px; font-weight: bold; margin: 0 auto 15px; }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-brand">NodBot Finance</div>
+        <ul class="sidebar-nav">
+            <li><a href="/admin/dashboard"><i class="fas fa-home"></i><span>Dashboard</span></a></li>
+            <li><a href="/admin/loans"><i class="fas fa-hand-holding-usd"></i><span>Loans</span></a></li>
+            <li><a href="/admin/investments"><i class="fas fa-chart-line"></i><span>Investments</span></a></li>
+            <li><a href="/admin/payments"><i class="fas fa-exchange-alt"></i><span>Payments</span></a></li>
+            <li><a href="/admin/users" class="active"><i class="fas fa-users"></i><span>Users</span></a></li>
+            <li><a href="/admin/settings"><i class="fas fa-cog"></i><span>Settings</span></a></li>
+            <li><a href="/auth/logout"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
+        </ul>
+    </div>
+    <div class="top-navbar">
+        <h4 class="mb-0">Users Management</h4>
+        <div class="user-avatar">{{ session.username[0].upper() }}</div>
+    </div>
+    <div class="main-content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>All Users</h2>
+            <div>
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addUserModal"><i class="fas fa-user-plus"></i> Add New User</button>
+                <button class="btn btn-secondary" onclick="loadUsers()"><i class="fas fa-sync-alt"></i> Refresh</button>
+            </div>
+        </div>
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4"><label class="form-label">Filter by Role</label><select class="form-select" id="filter-role" onchange="loadUsers()"><option value="">All Roles</option><option value="user">User</option><option value="admin">Admin</option><option value="master">Master</option></select></div>
+                    <div class="col-md-4"><label class="form-label">Search</label><input type="text" class="form-control" id="search-user" placeholder="Search..." onkeyup="loadUsers()"></div>
+                    <div class="col-md-4"><label class="form-label">Sort By</label><select class="form-select" id="sort-by" onchange="loadUsers()"><option value="created_at">Newest First</option><option value="username">Username A-Z</option><option value="balance">Highest Balance</option></select></div>
+                </div>
+            </div>
+        </div>
+        <div class="row mb-4">
+            <div class="col-md-3"><div class="card text-center"><div class="card-body"><h3 id="total-users">0</h3><p class="text-muted mb-0">Total Users</p></div></div></div>
+            <div class="col-md-3"><div class="card text-center"><div class="card-body"><h3 id="regular-users">0</h3><p class="text-muted mb-0">Regular Users</p></div></div></div>
+            <div class="col-md-3"><div class="card text-center"><div class="card-body"><h3 id="admin-users">0</h3><p class="text-muted mb-0">Admins</p></div></div></div>
+            <div class="col-md-3"><div class="card text-center"><div class="card-body"><h3 id="total-balance">₹0</h3><p class="text-muted mb-0">Total Balance</p></div></div></div>
+        </div>
+        <div class="row" id="users-container">
+            <div class="col-md-12"><div class="text-center py-5"><div class="spinner-border text-primary"></div><p class="mt-3">Loading users...</p></div></div>
+        </div>
+    </div>
+    <div class="modal fade" id="addUserModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title">Add New User</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <form id="add-user-form">
+                        <div class="mb-3"><label class="form-label">Username *</label><input type="text" class="form-control" id="new-username" required></div>
+                        <div class="mb-3"><label class="form-label">Email *</label><input type="email" class="form-control" id="new-email" required></div>
+                        <div class="mb-3"><label class="form-label">Password *</label><input type="password" class="form-control" id="new-password" required></div>
+                        <div class="mb-3"><label class="form-label">Role *</label><select class="form-select" id="new-role" required><option value="user">User</option><option value="admin">Admin</option><option value="master">Master</option></select></div>
+                        <div class="mb-3"><label class="form-label">Initial Balance (₹)</label><input type="number" class="form-control" id="new-balance" value="0" min="0" step="100"></div>
+                        <button type="submit" class="btn btn-success w-100"><i class="fas fa-user-plus"></i> Create User</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="viewUserModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title">User Details</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body" id="user-details-content"></div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="updateBalanceModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title">Update Balance</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <form id="update-balance-form">
+                        <input type="hidden" id="update-user-id">
+                        <div class="mb-3"><label class="form-label">Username</label><input type="text" class="form-control" id="update-username" readonly></div>
+                        <div class="mb-3"><label class="form-label">Current Balance</label><input type="text" class="form-control" id="current-balance" readonly></div>
+                        <div class="mb-3"><label class="form-label">New Balance (₹) *</label><input type="number" class="form-control" id="new-balance-amount" min="0" step="0.01" required></div>
+                        <button type="submit" class="btn btn-primary w-100"><i class="fas fa-save"></i> Update Balance</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    let allUsers = [];
+    const currentUserId = {{ session.user_id }};
+    async function loadUsers() {
+        const token = localStorage.getItem('token');
+        const container = document.getElementById('users-container');
+        try {
+            const response = await fetch('/admin/api/users', { headers: {'Authorization': 'Bearer ' + token} });
+            const data = await response.json();
+            if (data.success && data.users) {
+                allUsers = data.users;
+                let filteredUsers = [...allUsers];
+                const roleFilter = document.getElementById('filter-role').value;
+                if (roleFilter) filteredUsers = filteredUsers.filter(u => u.role === roleFilter);
+                const searchTerm = document.getElementById('search-user').value.toLowerCase();
+                if (searchTerm) filteredUsers = filteredUsers.filter(u => u.username.toLowerCase().includes(searchTerm) || u.email.toLowerCase().includes(searchTerm));
+                const sortBy = document.getElementById('sort-by').value;
+                if (sortBy === 'username') filteredUsers.sort((a, b) => a.username.localeCompare(b.username));
+                else if (sortBy === 'balance') filteredUsers.sort((a, b) => parseFloat(b.balance) - parseFloat(a.balance));
+                else filteredUsers.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                document.getElementById('total-users').textContent = allUsers.length;
+                document.getElementById('regular-users').textContent = allUsers.filter(u => u.role === 'user').length;
+                document.getElementById('admin-users').textContent = allUsers.filter(u => u.role === 'admin' || u.role === 'master').length;
+                const totalBalance = allUsers.reduce((sum, u) => sum + parseFloat(u.balance || 0), 0);
+                document.getElementById('total-balance').textContent = '₹' + totalBalance.toFixed(2);
+                container.innerHTML = '';
+                if (filteredUsers.length > 0) {
+                    filteredUsers.forEach(user => {
+                        const roleColors = {'user': 'primary', 'admin': 'warning', 'master': 'danger', 'master_assistant': 'info'};
+                        const roleColor = roleColors[user.role] || 'secondary';
+                        const deleteBtn = user.id != currentUserId ? `<button class="btn btn-sm btn-outline-danger" onclick="deleteUser(${user.id}, '${user.username}')"><i class="fas fa-trash"></i> Delete</button>` : '';
+                        container.innerHTML += `<div class="col-md-4 mb-4"><div class="user-card"><div class="user-avatar-large">${user.username.charAt(0).toUpperCase()}</div><div class="text-center"><h5 class="mb-1">${user.username}</h5><p class="text-muted small mb-2">${user.email}</p><span class="badge bg-${roleColor} mb-3">${user.role.toUpperCase()}</span><div class="d-flex justify-content-around mb-3"><div><small class="text-muted d-block">Balance</small><strong>₹${parseFloat(user.balance).toFixed(2)}</strong></div><div><small class="text-muted d-block">Member Since</small><strong>${new Date(user.created_at).toLocaleDateString()}</strong></div></div><div class="btn-group w-100"><button class="btn btn-sm btn-outline-primary" onclick="viewUser(${user.id})"><i class="fas fa-eye"></i> View</button><button class="btn btn-sm btn-outline-success" onclick="showUpdateBalance(${user.id}, '${user.username}', ${user.balance})"><i class="fas fa-wallet"></i> Balance</button>${deleteBtn}</div></div></div></div>`;
+                    });
+                } else {
+                    container.innerHTML = '<div class="col-md-12 text-center py-5"><p class="text-muted">No users found</p></div>';
+                }
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            container.innerHTML = '<div class="col-md-12"><div class="alert alert-danger">Error loading users</div></div>';
+        }
+    }
+    async function viewUser(userId) {
+        const token = localStorage.getItem('token');
+        try {
+            const response = await fetch(`/admin/api/users/${userId}`, { headers: {'Authorization': 'Bearer ' + token} });
+            const data = await response.json();
+            if (data.success) {
+                const user = data.user;
+                document.getElementById('user-details-content').innerHTML = `<div class="text-center mb-4"><div class="user-avatar-large">${user.username.charAt(0).toUpperCase()}</div><h4>${user.username}</h4><p class="text-muted">${user.email}</p><span class="badge bg-primary">${user.role}</span></div><div class="row"><div class="col-md-6"><p><strong>User ID:</strong> ${user.id}</p><p><strong>Balance:</strong> ₹${parseFloat(user.balance).toFixed(2)}</p><p><strong>Member Since:</strong> ${new Date(user.created_at).toLocaleString()}</p></div><div class="col-md-6"><p><strong>Total Loans:</strong> ${user.stats?.loans?.total_loans || 0}</p><p><strong>Total Investments:</strong> ${user.stats?.investments?.total_investments || 0}</p><p><strong>Total Transactions:</strong> ${user.stats?.payments?.total_transactions || 0}</p></div></div>`;
+                new bootstrap.Modal(document.getElementById('viewUserModal')).show();
+            }
+        } catch (error) { console.error('Error:', error); }
+    }
+    function showUpdateBalance(userId, username, currentBalance) {
+        document.getElementById('update-user-id').value = userId;
+        document.getElementById('update-username').value = username;
+        document.getElementById('current-balance').value = '₹' + parseFloat(currentBalance).toFixed(2);
+        document.getElementById('new-balance-amount').value = parseFloat(currentBalance).toFixed(2);
+        new bootstrap.Modal(document.getElementById('updateBalanceModal')).show();
+    }
+    document.getElementById('update-balance-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const token = localStorage.getItem('token');
+        const userId = document.getElementById('update-user-id').value;
+        const newBalance = document.getElementById('new-balance-amount').value;
+        try {
+            const response = await fetch(`/admin/api/users/${userId}/update-balance`, {
+                method: 'POST',
+                headers: {'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json'},
+                body: JSON.stringify({ balance: parseFloat(newBalance) })
+            });
+            const data = await response.json();
+            alert(data.message);
+            if (data.success) {
+                bootstrap.Modal.getInstance(document.getElementById('updateBalanceModal')).hide();
+                loadUsers();
+            }
+        } catch (error) { alert('❌ Error updating balance'); }
+    });
+    document.getElementById('add-user-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const userData = {
+            username: document.getElementById('new-username').value,
+            email: document.getElementById('new-email').value,
+            password: document.getElementById('new-password').value,
+            role: document.getElementById('new-role').value,
+            initial_balance: parseFloat(document.getElementById('new-balance').value)
+        };
+        try {
+            const response = await fetch('/auth/register', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(userData)
+            });
+            const data = await response.json();
+            alert(data.message);
+            if (data.success) {
+                bootstrap.Modal.getInstance(document.getElementById('addUserModal')).hide();
+                document.getElementById('add-user-form').reset();
+                loadUsers();
+            }
+        } catch (error) { alert('❌ Error creating user'); }
+    });
+    async function deleteUser(userId, username) {
+        if (!confirm(`Delete user "${username}"?`)) return;
+        const token = localStorage.getItem('token');
+        try {
+            const response = await fetch(`/admin/api/users/${userId}/delete`, {
+                method: 'DELETE',
+                headers: {'Authorization': 'Bearer ' + token}
+            });
+            const data = await response.json();
+            alert(data.message);
+            if (data.success) loadUsers();
+        } catch (error) { alert('❌ Error deleting user'); }
+    }
+    loadUsers();
+    </script>
+</body>
+</html>
