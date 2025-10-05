@@ -1,0 +1,256 @@
+# ================================
+# NodBot Finance - .gitignore
+# ================================
+
+# ===========================
+# Dependencies
+# ===========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+pnpm-debug.log*
+lerna-debug.log*
+
+# ===========================
+# Environment Variables
+# ===========================
+.env
+.env.local
+.env.development
+.env.development.local
+.env.test
+.env.test.local
+.env.production
+.env.production.local
+.env.*.local
+
+# ===========================
+# Database
+# ===========================
+*.sql
+*.sqlite
+*.sqlite3
+*.db
+database.json
+db-backup/
+dumps/
+migrations/
+*.mwb
+*.mwb.bak
+
+# ===========================
+# Logs
+# ===========================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pids
+*.pid
+*.seed
+*.pid.lock
+combined.log
+error.log
+access.log
+
+# ===========================
+# Operating System Files
+# ===========================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+*.stackdump
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ===========================
+# IDEs and Editors
+# ===========================
+# VSCode
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+.history/
+
+# JetBrains IDEs (WebStorm, IntelliJ IDEA, etc.)
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+.idea_modules/
+
+# Sublime Text
+*.sublime-workspace
+*.sublime-project
+
+# Vim
+*.swp
+*.swo
+*.swn
+*~
+.netrwhist
+
+# Atom
+.atom/
+
+# Eclipse
+.project
+.classpath
+.settings/
+.buildpath
+
+# ===========================
+# Build & Distribution
+# ===========================
+dist/
+build/
+out/
+.next/
+.nuxt/
+.cache/
+.parcel-cache/
+.vuepress/dist/
+.serverless/
+.fusebox/
+coverage/
+.nyc_output/
+
+# ===========================
+# Testing
+# ===========================
+coverage/
+.nyc_output/
+*.lcov
+.grunt
+lib-cov
+test-results/
+junit.xml
+__tests__/__snapshots__/
+
+# ===========================
+# Temporary Files
+# ===========================
+tmp/
+temp/
+*.tmp
+*.temp
+*.bak
+*.backup
+*.old
+*.orig
+*.cache
+
+# ===========================
+# Uploads & User Data
+# ===========================
+uploads/
+public/uploads/
+client/public/uploads/
+user-data/
+attachments/
+
+# ===========================
+# Security & Keys
+# ===========================
+*.pem
+*.key
+*.cert
+*.crt
+*.p12
+*.pfx
+id_rsa
+id_rsa.pub
+.ssh/
+secrets/
+config/secrets.js
+config/keys.js
+
+# ===========================
+# Node.js Specific
+# ===========================
+.npm
+.eslintcache
+.node_repl_history
+*.tsbuildinfo
+.grunt
+jspm_packages/
+typings/
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+# ===========================
+# TypeScript (if used)
+# ===========================
+*.tsbuildinfo
+*.d.ts.map
+
+# ===========================
+# React/Frontend Specific
+# ===========================
+# production build
+client/build/
+client/dist/
+
+# misc
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# ===========================
+# Docker
+# ===========================
+*.dockerignore
+docker-compose.override.yml
+.docker/
+
+# ===========================
+# CI/CD
+# ===========================
+.gitlab-ci.yml
+.travis.yml
+.circleci/
+.github/workflows/
+
+# ===========================
+# Miscellaneous
+# ===========================
+.lock
+*.backup
+*.swp
+*~
+*.log
+.cache
+.temp
+.vs/
+*.code-workspace
